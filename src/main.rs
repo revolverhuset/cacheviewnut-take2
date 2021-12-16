@@ -7,6 +7,9 @@ use serde::{
 use serde_derive::Serialize;
 use std::{collections::BTreeMap, fmt, marker::PhantomData};
 
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 struct RationalVisitor;
 
 pub fn parse_mixed_number(number: &str) -> Result<BigRational, String> {
