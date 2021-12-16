@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use num::{rational::BigRational, Zero};
 use regex::Regex;
 use serde::{
@@ -7,16 +8,17 @@ use serde::{
 use serde_derive::Serialize;
 use std::{collections::BTreeMap, fmt, marker::PhantomData};
 
-#[global_allocator]
-static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
-
 struct RationalVisitor;
 
 pub fn parse_mixed_number(number: &str) -> Result<BigRational, String> {
     use std::str::FromStr;
 
-    let mixed_number = Regex::new(r"^((-)?(\d+)( (\d+/\d+))?|(-?\d+/\d+))$").unwrap();
-    match mixed_number.captures(number) {
+    lazy_static! {
+        static ref MIXED_NUMBER: Regex =
+            Regex::new(r"^((-)?(\d+)( (\d+/\d+))?|(-?\d+/\d+))$").unwrap();
+    }
+
+    match MIXED_NUMBER.captures(number) {
         Some(groups) => {
             let mut result = BigRational::from_str("0").unwrap();
             if let Some(x) = groups.get(3) {
