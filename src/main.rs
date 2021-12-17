@@ -206,24 +206,36 @@ struct BalancesView {
     rows: Vec<BalancesRow>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let all_docs: AllDocs = {
-        let stdin = std::io::stdin();
-        let stdin_lock = stdin.lock();
-        serde_json::from_reader(stdin_lock)
-    }?;
+use warp::Filter;
 
-    let balances = balances(all_docs);
-    println!(
-        "{}",
-        serde_json::to_string(&BalancesView {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut args = std::env::args();
+    let program = args.next().unwrap();
+    let url = args
+        .next()
+        .ok_or_else(|| format!("Usage: {} <url>", program))?;
+    let url = Box::leak(url.into_boxed_str());
+
+    let hello = warp::path!("hello").and_then(|| async {
+        let all_docs: AllDocs = reqwest::get(&*url)
+            .await
+            .map_err(|_| warp::reject())?
+            .json()
+            .await
+            .map_err(|_| warp::reject())?;
+
+        let balances = balances(all_docs);
+
+        Result::<_, warp::Rejection>::Ok(warp::reply::json(&BalancesView {
             rows: balances
                 .into_iter()
                 .map(|(key, value)| BalancesRow { key, value })
-                .collect()
-        })
-        .unwrap()
-    );
+                .collect(),
+        }))
+    });
+
+    warp::serve(hello).run(([127, 0, 0, 1], 3030)).await;
 
     Ok(())
 }

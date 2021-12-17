@@ -1,7 +1,7 @@
 [package]
 name = "cacheviewnut-take2"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,3 +12,6 @@ serde = "1.0.128"
 serde_derive = "1.0.130"
 serde_json = "1.0.70"
 lazy_static = "1.4.0"
+reqwest = { version="0.11.7", default-features=false, features=["json"]}
+tokio = { version = "1", features = ["full"] }
+warp = "0.3"
